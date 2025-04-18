@@ -46,13 +46,18 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
   // Load data from localStorage on initial render
   useEffect(() => {
-    const storedData = localStorage.getItem('bookingData');
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        setBookingData(parsedData);
-      } catch (e) {
-        console.error('Error parsing booking data from localStorage:', e);
+    // Check if window is defined (client-side only)
+    if (typeof window !== 'undefined') {
+      const storedData = localStorage.getItem('bookingData');
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          setBookingData(parsedData);
+        } catch (e) {
+          console.error('Error parsing booking data from localStorage:', e);
+          // Clear invalid data
+          localStorage.removeItem('bookingData');
+        }
       }
     }
   }, []);
@@ -61,8 +66,14 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const updateBookingData = (data: Partial<BookingData>) => {
     setBookingData(prev => {
       const updatedData = { ...prev, ...data };
-      // Save to localStorage
-      localStorage.setItem('bookingData', JSON.stringify(updatedData));
+      // Save to localStorage (client-side only)
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('bookingData', JSON.stringify(updatedData));
+        } catch (e) {
+          console.error('Error saving booking data to localStorage:', e);
+        }
+      }
       return updatedData;
     });
   };
@@ -70,7 +81,14 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   // Clear booking data
   const clearBookingData = () => {
     setBookingData({});
-    localStorage.removeItem('bookingData');
+    // Remove from localStorage (client-side only)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('bookingData');
+      } catch (e) {
+        console.error('Error removing booking data from localStorage:', e);
+      }
+    }
   };
 
   return (
