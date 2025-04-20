@@ -58,13 +58,34 @@ export default function Step6() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    const inputValue = type === 'checkbox' ? checked : value;
+    let inputValue = type === 'checkbox' ? checked : value;
+    
+    // Format card number with spaces
+    if (name === 'cardNumber') {
+      // Remove non-digits
+      const digits = value.replace(/\D/g, '');
+      // Add space after every 4 digits
+      const formatted = digits.replace(/(.{4})/g, '$1 ').trim();
+      inputValue = formatted;
+    }
+    
+    // Format expiry date with slash
+    if (name === 'expiryDate') {
+      // Remove non-digits
+      const digits = value.replace(/\D/g, '');
+      if (digits.length > 2) {
+        inputValue = `${digits.substring(0, 2)}/${digits.substring(2, 4)}`;
+      } else {
+        inputValue = digits;
+      }
+    }
     
     setFormData(prev => ({ ...prev, [name]: inputValue }));
     
     // Clear error when user types
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      // Use empty string instead of null to match the type Record<string, string | boolean>
+      setErrors(prev => ({ ...prev, [name]: type === 'checkbox' ? false : '' }));
     }
   };
 
@@ -75,7 +96,7 @@ export default function Step6() {
     
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
     
@@ -87,7 +108,7 @@ export default function Step6() {
     
     if (!formData.cardNumber.trim()) {
       newErrors.cardNumber = 'Card number is required';
-    } else if (!/^[0-9]{16}$/.test(formData.cardNumber.replace(/\s+/g, ''))) {
+    } else if (!/^[0-9\s]{16,19}$/.test(formData.cardNumber) || formData.cardNumber.replace(/\s+/g, '').length !== 16) {
       newErrors.cardNumber = 'Card number must be 16 digits';
     }
     
@@ -95,6 +116,14 @@ export default function Step6() {
       newErrors.expiryDate = 'Expiry date is required';
     } else if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(formData.expiryDate)) {
       newErrors.expiryDate = 'Expiry date must be in MM/YY format';
+    } else {
+      // Check if expiry date is in the future
+      const [month, year] = formData.expiryDate.split('/');
+      const expiryDate = new Date(2000 + parseInt(year), parseInt(month) - 1);
+      const currentDate = new Date();
+      if (expiryDate < currentDate) {
+        newErrors.expiryDate = 'Card has expired';
+      }
     }
     
     if (!formData.cvv.trim()) {
@@ -126,6 +155,12 @@ export default function Step6() {
       const reference = 'UK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       setBookingReference(reference);
       
+      // Save booking reference to the booking data
+      const updatedBookingData = { ...bookingData, reference };
+      
+      // Store the complete booking data for confirmation page
+      localStorage.setItem('completedBooking', JSON.stringify(updatedBookingData));
+      
       // Clear booking data from localStorage
       localStorage.removeItem('bookingData');
       
@@ -153,6 +188,13 @@ export default function Step6() {
   }
 
   if (bookingComplete) {
+    // Get completed booking data from localStorage
+    const completedBookingData = typeof window !== 'undefined' ? 
+      JSON.parse(localStorage.getItem('completedBooking') || '{}') : {};
+    
+    // Use the completed booking data or fall back to the state variable
+    const displayData = Object.keys(completedBookingData).length > 0 ? completedBookingData : bookingData;
+    
     return (
       <main className="min-h-screen flex flex-col items-center p-0 bg-gray-50">
         {/* Hero Banner */}
@@ -179,17 +221,17 @@ export default function Step6() {
             </div>
             
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Booking is Confirmed</h2>
-            <p className="text-lg text-gray-600 mb-6">Your booking reference is: <span className="font-bold text-blue-600">{bookingReference}</span></p>
+            <p className="text-lg text-gray-600 mb-6">Your booking reference is: <span className="font-bold text-blue-600">{displayData.reference || bookingReference}</span></p>
             <p className="text-gray-600 mb-8">We've sent a confirmation email with all the details of your booking. Our team will contact you before the scheduled date to confirm all arrangements.</p>
             
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-8 max-w-md mx-auto">
               <h3 className="text-lg font-medium text-blue-800 mb-2">Booking Summary</h3>
               <div className="text-left">
-                <p className="text-gray-700"><span className="font-medium">Service Type:</span> {bookingData.serviceType === 'residential' ? 'Residential Removal' : 'Business Removal'}</p>
-                <p className="text-gray-700"><span className="font-medium">Date:</span> {new Date(bookingData.date).toLocaleDateString('en-GB')}</p>
-                <p className="text-gray-700"><span className="font-medium">Time:</span> {bookingData.time}</p>
-                <p className="text-gray-700"><span className="font-medium">Vehicle:</span> {bookingData.vehicleName}</p>
-                <p className="text-gray-700"><span className="font-medium">Total Paid:</span> £{bookingData.totalPrice}</p>
+                <p className="text-gray-700"><span className="font-medium">Service Type:</span> {displayData.serviceType === 'residential' ? 'Residential Removal' : 'Business Removal'}</p>
+                <p className="text-gray-700"><span className="font-medium">Date:</span> {displayData.date ? new Date(displayData.date).toLocaleDateString('en-GB') : 'N/A'}</p>
+                <p className="text-gray-700"><span className="font-medium">Time:</span> {displayData.time || 'N/A'}</p>
+                <p className="text-gray-700"><span className="font-medium">Vehicle:</span> {displayData.vehicleName || 'N/A'}</p>
+                <p className="text-gray-700"><span className="font-medium">Total Paid:</span> £{displayData.totalPrice || 0}</p>
               </div>
             </div>
             
@@ -383,6 +425,7 @@ export default function Step6() {
                     }`}
                     placeholder="1234 5678 9012 3456"
                     maxLength={19}
+                    autoComplete="cc-number"
                   />
                   {errors.cardNumber && (
                     <p className="mt-1 text-red-500 text-sm">{errors.cardNumber}</p>
@@ -402,6 +445,7 @@ export default function Step6() {
                     }`}
                     placeholder="MM/YY"
                     maxLength={5}
+                    autoComplete="cc-exp"
                   />
                   {errors.expiryDate && (
                     <p className="mt-1 text-red-500 text-sm">{errors.expiryDate}</p>
@@ -421,6 +465,7 @@ export default function Step6() {
                     }`}
                     placeholder="123"
                     maxLength={4}
+                    autoComplete="cc-csc"
                   />
                   {errors.cvv && (
                     <p className="mt-1 text-red-500 text-sm">{errors.cvv}</p>

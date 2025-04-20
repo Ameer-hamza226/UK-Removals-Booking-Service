@@ -78,7 +78,13 @@ export default function GooglePlacesAutocomplete({
     }
 
     // Get API key, with fallback for deployment
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'placeholder_key';
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+    
+    // Check if API key is available
+    if (!apiKey) {
+      console.error('Google Maps API key is missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');
+      return;
+    }
     
     // Load the script
     const script = document.createElement('script');
@@ -94,7 +100,8 @@ export default function GooglePlacesAutocomplete({
     
     // Handle errors
     script.onerror = () => {
-      console.error('Failed to load Google Maps API script');
+      console.error('Failed to load Google Maps API script. Please check your API key and internet connection.');
+      setLoaded(true); // Enable the input even if Google Maps fails to load
     };
     
     // Add script to document
@@ -121,6 +128,7 @@ export default function GooglePlacesAutocomplete({
       className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
         error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
       } ${className}`}
+      autoComplete="off"
       disabled={!loaded}
     />
   );
