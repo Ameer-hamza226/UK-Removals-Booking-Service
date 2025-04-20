@@ -16,6 +16,7 @@ interface GooglePlacesAutocompleteProps {
 declare global {
   interface Window {
     google: any;
+    initGooglePlacesAutocomplete?: () => void;
   }
 }
 
@@ -62,6 +63,7 @@ export default function GooglePlacesAutocomplete({
         setLoaded(true);
       } catch (error) {
         console.error('Error initializing Google Places Autocomplete:', error);
+        setLoaded(true); // Enable the input even if initialization fails
       }
     }
   };
@@ -77,26 +79,27 @@ export default function GooglePlacesAutocomplete({
       return;
     }
 
+    // Define the callback function for script loading
+    window.initGooglePlacesAutocomplete = () => {
+      initAutocomplete();
+    };
+
     // Get API key, with fallback for deployment
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'placeholder_key';
     
-    // Check if API key is available
-    if (!apiKey) {
-      console.error('Google Maps API key is missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');
+    // Check if API key is available or is just a placeholder
+    if (!apiKey || apiKey === 'placeholder_key' || apiKey.includes('placeholder')) {
+      console.error('Google Maps API key is missing or using a placeholder. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');
+      setLoaded(true); // Enable the input even if API key is missing
       return;
     }
     
     // Load the script
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlacesAutocomplete`;
     script.async = true;
     script.defer = true;
     script.id = 'google-maps-script';
-    
-    // Set up script load handler
-    script.onload = () => {
-      initAutocomplete();
-    };
     
     // Handle errors
     script.onerror = () => {
@@ -112,6 +115,10 @@ export default function GooglePlacesAutocomplete({
       const existingScript = document.getElementById('google-maps-script');
       if (existingScript) {
         document.head.removeChild(existingScript);
+      }
+      // Safe way to delete the callback
+      if (window.initGooglePlacesAutocomplete) {
+        window.initGooglePlacesAutocomplete = undefined as any;
       }
     };
   }, []);
