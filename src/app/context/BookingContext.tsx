@@ -48,15 +48,19 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check if window is defined (client-side only)
     if (typeof window !== 'undefined') {
-      const storedData = localStorage.getItem('bookingData');
-      if (storedData) {
-        try {
+      try {
+        const storedData = localStorage.getItem('bookingData');
+        if (storedData) {
           const parsedData = JSON.parse(storedData);
           setBookingData(parsedData);
-        } catch (e) {
-          console.error('Error parsing booking data from localStorage:', e);
-          // Clear invalid data
+        }
+      } catch (e) {
+        console.error('Error parsing booking data from localStorage:', e);
+        // Clear invalid data
+        try {
           localStorage.removeItem('bookingData');
+        } catch (e) {
+          console.error('Error removing invalid booking data from localStorage:', e);
         }
       }
     }

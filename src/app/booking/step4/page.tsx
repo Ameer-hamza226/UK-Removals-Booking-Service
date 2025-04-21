@@ -8,7 +8,7 @@ import Image from 'next/image';
 export default function Step4() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [bookingData, setBookingData] = useState(null);
+  const [bookingData, setBookingData] = useState<Record<string, any> | null>(null);
   const [hours, setHours] = useState(2); // Default to 2 hours
   const [basePrice, setBasePrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -48,7 +48,7 @@ export default function Step4() {
     }
   }, [searchParams, router, hours]);
 
-  const handleHoursChange = (newHours) => {
+  const handleHoursChange = (newHours: number) => {
     // Ensure hours is between 2 and 12
     const validHours = Math.max(2, Math.min(12, newHours));
     setHours(validHours);
@@ -60,7 +60,7 @@ export default function Step4() {
 
     // Update booking data with hours and price
     const updatedBookingData = {
-      ...bookingData,
+      ...(bookingData || {}),
       hours: hours,
       basePrice: basePrice,
       totalHoursPrice: totalPrice
@@ -68,7 +68,7 @@ export default function Step4() {
 
     // Store updated data
     localStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
-    router.push(`/booking/step5?type=${bookingData.serviceType}`);
+    router.push(`/booking/step5?type=${bookingData?.serviceType || 'residential'}`);
   };
 
   if (loading) {
@@ -121,12 +121,12 @@ export default function Step4() {
             <h3 className="text-lg font-medium text-blue-800 mb-2">Your Selected Vehicle</h3>
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-700"><span className="font-medium">Type:</span> {bookingData.vehicleName}</p>
+                <p className="text-gray-700"><span className="font-medium">Vehicle:</span> {bookingData?.vehicleName || 'Not specified'}</p>
                 <p className="text-gray-700"><span className="font-medium">Base Rate:</span> £{basePrice}/hour</p>
               </div>
               <div className="text-right">
-                <p className="text-gray-700"><span className="font-medium">Date:</span> {new Date(bookingData.date).toLocaleDateString('en-GB')}</p>
-                <p className="text-gray-700"><span className="font-medium">Time:</span> {bookingData.time}</p>
+                <p className="text-gray-700"><span className="font-medium">Date:</span> {bookingData?.date ? new Date(bookingData.date).toLocaleDateString('en-GB') : 'Not specified'}</p>
+                <p className="text-gray-700"><span className="font-medium">Time:</span> {bookingData?.time || 'Not specified'}</p>
               </div>
             </div>
           </div>

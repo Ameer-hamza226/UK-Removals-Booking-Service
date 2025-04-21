@@ -48,7 +48,7 @@ const vehicles = [
 export default function Step3() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [bookingData, setBookingData] = useState(null);
+  const [bookingData, setBookingData] = useState<Record<string, any> | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [error, setError] = useState(false);
 
@@ -76,7 +76,7 @@ export default function Step3() {
     }
   }, [searchParams, router]);
 
-  const handleVehicleSelect = (vehicleId) => {
+  const handleVehicleSelect = (vehicleId: string) => {
     setSelectedVehicle(vehicleId);
     setError(false);
   };
@@ -89,6 +89,12 @@ export default function Step3() {
 
     // Update booking data with selected vehicle
     const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle);
+    
+    if (!selectedVehicleData) {
+      setError(true);
+      return;
+    }
+    
     const updatedBookingData = {
       ...bookingData,
       vehicle: selectedVehicle,
@@ -98,7 +104,7 @@ export default function Step3() {
 
     // Store updated data
     localStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
-    router.push(`/booking/step4?type=${bookingData.serviceType}`);
+    router.push(`/booking/step4?type=${bookingData?.serviceType || 'residential'}`);
   };
 
   return (

@@ -222,7 +222,7 @@ export default function Step6() {
             
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Booking is Confirmed</h2>
             <p className="text-lg text-gray-600 mb-6">Your booking reference is: <span className="font-bold text-blue-600">{displayData.reference || bookingReference}</span></p>
-            <p className="text-gray-600 mb-8">We've sent a confirmation email with all the details of your booking. Our team will contact you before the scheduled date to confirm all arrangements.</p>
+            <p className="text-gray-600 mb-8">We&apos;ve sent a confirmation email with all the details of your booking. Our team will contact you before the scheduled date to confirm all arrangements.</p>
             
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-8 max-w-md mx-auto">
               <h3 className="text-lg font-medium text-blue-800 mb-2">Booking Summary</h3>

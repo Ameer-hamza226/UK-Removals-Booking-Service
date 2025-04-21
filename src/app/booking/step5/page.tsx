@@ -42,8 +42,8 @@ const additionalOptions = [
 export default function Step5() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [bookingData, setBookingData] = useState(null);
-  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [bookingData, setBookingData] = useState<Record<string, any> | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [basePrice, setBasePrice] = useState(0);
   const [additionalPrice, setAdditionalPrice] = useState(0);
@@ -94,7 +94,7 @@ export default function Step5() {
     setTotalPrice(basePrice + optionsPrice);
   }, [selectedOptions, basePrice]);
 
-  const handleOptionToggle = (optionId) => {
+  const handleOptionToggle = (optionId: string) => {
     setSelectedOptions(prev => {
       if (prev.includes(optionId)) {
         return prev.filter(id => id !== optionId);
@@ -110,6 +110,9 @@ export default function Step5() {
     // Get selected option details
     const selectedOptionDetails = selectedOptions.map(optionId => {
       const option = additionalOptions.find(opt => opt.id === optionId);
+      if (!option) {
+        return { id: optionId, name: 'Unknown option', price: 0 };
+      }
       return {
         id: option.id,
         name: option.name,
@@ -180,13 +183,13 @@ export default function Step5() {
             <h3 className="text-lg font-medium text-blue-800 mb-2">Your Booking Summary</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-gray-700"><span className="font-medium">Service Type:</span> {bookingData.serviceType === 'residential' ? 'Residential Removal' : 'Business Removal'}</p>
-                <p className="text-gray-700"><span className="font-medium">Vehicle:</span> {bookingData.vehicleName}</p>
-                <p className="text-gray-700"><span className="font-medium">Duration:</span> {bookingData.hours} hours</p>
+                <p className="text-gray-700"><span className="font-medium">Service Type:</span> {bookingData?.serviceType === 'residential' ? 'Residential Removal' : 'Business Removal'}</p>
+                <p className="text-gray-700"><span className="font-medium">Vehicle:</span> {bookingData?.vehicleName || 'Not specified'}</p>
+                <p className="text-gray-700"><span className="font-medium">Duration:</span> {bookingData?.hours || 0} hours</p>
               </div>
               <div>
-                <p className="text-gray-700"><span className="font-medium">Date:</span> {new Date(bookingData.date).toLocaleDateString('en-GB')}</p>
-                <p className="text-gray-700"><span className="font-medium">Time:</span> {bookingData.time}</p>
+                <p className="text-gray-700"><span className="font-medium">Date:</span> {bookingData?.date ? new Date(bookingData.date).toLocaleDateString('en-GB') : 'Not specified'}</p>
+                <p className="text-gray-700"><span className="font-medium">Time:</span> {bookingData?.time || 'Not specified'}</p>
                 <p className="text-gray-700"><span className="font-medium">Base Price:</span> £{basePrice}</p>
               </div>
             </div>

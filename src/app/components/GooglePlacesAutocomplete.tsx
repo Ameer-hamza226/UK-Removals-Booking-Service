@@ -121,7 +121,7 @@ export default function GooglePlacesAutocomplete({
         window.initGooglePlacesAutocomplete = undefined as any;
       }
     };
-  }, []);
+  }, [initAutocomplete]);
 
   return (
     <input
